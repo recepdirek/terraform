@@ -1,0 +1,142 @@
+[ec2-user@ip-172-31-45-32 ~]$ aws iam get-user
+{
+    "User": {
+        "UserName": "kubuser",
+        "Path": "/",
+        "CreateDate": "2019-12-16T21:05:46Z",
+        "UserId": "AIDAWVvvvvvvvS4KB",
+        "Arn": "arn:aws:iam::457743111841:user/kubuser"
+    }
+}
+[ec2-user@ip-172-31-45-32 ~]$
+
+
+kubectl installaion on linux
+curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.17.0/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+kubectl version
+
+kops installaion on linux
+curl -LO  https://github.com/kubernetes/kops/releases/download/1.15.0/kops-linux-amd64
+chmod +x kops-linux-amd64
+sudo mv kops-linux-amd64 /usr/local/bin/kops
+
+
+terrafom installation on linux
+
+
+wget https://releases.hashicorp.com/terraform/0.12.18/terraform_0.12.18_linux_amd64.zip
+unzip terraform_0.12.18_linux_amd64.zip
+sudo mv terraform /usr/local/bin/terraform
+
+[ec2-user@ip-172-31-45-32 ~]$ more terraform.tfvars
+AWS_ACCESS_KEY="AKIAWvvvvvvvv"
+AWS_SECRET_KEY="vvvvvvvopEmktw/StFGeP"
+
+
+
+
+
+kops create cluster \
+  --name=mongodbjournal.com \
+  --state=s3://mongodbjournal.com \
+  --authorization RBAC \
+  --zones=eu-west-1a \
+  --node-count=2 \
+  --node-size=t2.micro \
+  --master-size=t2.micro \
+  --master-count=1 \
+  --dns-zone=mongodbjournal.com \
+  --out=mongodbjournal_terraform \
+  --target=terraform \
+  --ssh-public-key=~/.ssh/kub_deployment.pub
+  
+  
+  
+  
+ssh-keygen -f ~/.ssh/kub_deployment
+
+
+
+terraform init
+terraform apply
+
+
+if you get an error you have to do the steps below
+
+terraform 0.12upgrade
+terraform apply
+
+
+again if you get an error, you need to update kubernetes.tf file 
+
+
+# TF-UPGRADE-TODO: In Terraform v0.11 and earlier, it was possible to begin a
+# resource name with a number, but it is no longer possible in Terraform v0.12.
+#
+# Rename the resource and run `terraform state mv` to apply the rename in the
+# state. Detailed information on the `state move` command can be found in the
+# documentation online: https://www.terraform.io/docs/commands/state/mv.html
+resource "aws_route" "0-0-0-0--0" {
+  route_table_id         = aws_route_table.mongodbjournal-com.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.mongodbjournal-com.id
+}
+
+
+updated as below
+
+resource "aws_route" "a0-0-0-0--0" {
+  route_table_id         = aws_route_table.mongodbjournal-com.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.mongodbjournal-com.id
+}
+
+
+
+terraform state mv
+terraform apply
+
+Apply complete! Resources: 35 added, 0 changed, 0 destroyed.
+
+Outputs:
+
+cluster_name = mongodbjournal.com
+master_autoscaling_group_ids = [
+  "master-eu-west-1a.masters.mongodbjournal.com",
+]
+master_security_group_ids = [
+  "sg-0756b0687283f2b1a",
+]
+masters_role_arn = arn:aws:iam::457743111841:role/masters.mongodbjournal.com
+masters_role_name = masters.mongodbjournal.com
+node_autoscaling_group_ids = [
+  "nodes.mongodbjournal.com",
+]
+node_security_group_ids = [
+  "sg-0f3d0ee01252d9a45",
+]
+node_subnet_ids = [
+  "subnet-0e5eb3db01e5b15e6",
+]
+nodes_role_arn = arn:aws:iam::457743111841:role/nodes.mongodbjournal.com
+nodes_role_name = nodes.mongodbjournal.com
+region = eu-west-1
+route_table_public_id = rtb-0485393e8b1c447ca
+subnet_eu-west-1a_id = subnet-0e5eb3db01e5b15e6
+vpc_cidr_block = 172.20.0.0/16
+vpc_id = vpc-0a66c28e4fc1388c0
+
+
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$ kubectl get nodes
+NAME                                          STATUS   ROLES    AGE    VERSION
+ip-172-20-33-109.eu-west-1.compute.internal   Ready    node     9s     v1.15.6
+ip-172-20-38-104.eu-west-1.compute.internal   Ready    master   105s   v1.15.6
+ip-172-20-56-68.eu-west-1.compute.internal    Ready    node     11s    v1.15.6
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$
+
+
+you can checkh the kubernetes config file
+
+more ~/.kube/config
