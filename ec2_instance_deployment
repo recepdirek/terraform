@@ -1,0 +1,95 @@
+[ec2-user@ip-172-31-45-32 ~]$ aws iam get-user
+{
+    "User": {
+        "UserName": "kubuser",
+        "Path": "/",
+        "CreateDate": "2019-12-16T21:05:46Z",
+        "UserId": "xxxxxxxxxxxxxxx",
+        "Arn": "arn:aws:iam::457743111841:user/kubuser"
+    }
+}
+[ec2-user@ip-172-31-45-32 ~]$
+
+
+kubectl installaion on linux
+curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.17.0/bin/linux/amd64/kubectl
+chmod +x ./kubectl
+sudo mv ./kubectl /usr/local/bin/kubectl
+kubectl version
+
+kops installaion on linux
+curl -LO  https://github.com/kubernetes/kops/releases/download/1.15.0/kops-linux-amd64
+chmod +x kops-linux-amd64
+sudo mv kops-linux-amd64 /usr/local/bin/kops
+
+
+terrafom installation on linux
+
+
+wget https://releases.hashicorp.com/terraform/0.12.18/terraform_0.12.18_linux_amd64.zip
+unzip terraform_0.12.18_linux_amd64.zip
+sudo mv terraform /usr/local/bin/terraform
+
+[ec2-user@ip-172-31-45-32 ~]$ more terraform.tfvars
+AWS_ACCESS_KEY="xxxxxxxxxxxxxxxx"
+AWS_SECRET_KEY="xxxxxxxxxxxxxxxxxxxxxxx"
+
+
+
+[ec2-user@ip-172-31-45-32 ~]$ more terraform.code.tf
+# ************************
+# vars.tf
+# ************************
+
+variable "AWS_ACCESS_KEY" {}
+variable "AWS_SECRET_KEY" {}
+variable "AWS_REGION" {
+  default = "eu-west-1"
+}
+variable "AMIS" {
+  type = "map"
+  default = {
+    # *******************************************
+    # https://cloud-images.ubuntu.com/locator/ec2/
+    #
+    #   Ireland   => eu-west-1
+    #   OS        => UBUNTU Xenial 16.04 LTS
+    #   AMI_ID    => ami-0987ee37af7792903
+    #
+    #   AMI shortcut (AMAZON MACHINE IMAGE)
+    #
+    # *******************************************
+    eu-west-1 = "ami-0987ee37af7792903"
+  }
+}
+
+# ************************
+# provider.tf
+# ************************
+provider "aws" {
+    access_key = "${var.AWS_ACCESS_KEY}"
+    secret_key = "${var.AWS_SECRET_KEY}"
+    region = "${var.AWS_REGION}"
+}
+
+
+# ************************
+# instance.tf
+# ************************
+resource "aws_instance" "UDEMY_DEVOPSINUSE" {
+  ami = "${lookup(var.AMIS, var.AWS_REGION)}"
+  tags = { Name = "UDEMY" }
+  instance_type = "t2.micro"
+  provisioner "local-exec" {
+     command = "echo ${aws_instance.UDEMY_DEVOPSINUSE.private_ip} >> private_ips.txt"
+  }
+}
+output "ip" {
+    value = "${aws_instance.UDEMY_DEVOPSINUSE.public_ip}"
+}
+
+
+
+
+terraform init
+terraform apply
