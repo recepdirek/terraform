@@ -1,0 +1,56 @@
+#sudo amazon-linux-extras install nginx1
+
+
+
+kubectl \
+        create deployment my-nginx-deployment \
+        --image=nginx
+		
+		
+kubectl \
+        expose deployment my-nginx-deployment \
+        --port=80 \
+        --type=NodePort \
+        --name=my-nginx-service
+		
+		
+		
+		
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$ kubectl \
+>         create deployment my-nginx-deployment \
+>         --image=nginx
+deployment.apps/my-nginx-deployment created
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$ kubectl get pods
+NAME                                   READY   STATUS              RESTARTS   AGE
+my-nginx-deployment-8568dcdfc4-4sf42   0/1     ContainerCreating   0          3s
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$
+
+
+
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$ kubectl \
+>         expose deployment my-nginx-deployment \
+>         --port=80 \
+>         --type=NodePort \
+>         --name=my-nginx-service
+service/my-nginx-service exposed
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$ kubectl get pods
+NAME                                   READY   STATUS    RESTARTS   AGE
+my-nginx-deployment-8568dcdfc4-4sf42   1/1     Running   0          43s
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$ kubectl get pods,svc
+NAME                                       READY   STATUS    RESTARTS   AGE
+pod/my-nginx-deployment-8568dcdfc4-4sf42   1/1     Running   0          50s
+
+NAME                       TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)        AGE
+service/kubernetes         ClusterIP   100.64.0.1       <none>        443/TCP        61m
+service/my-nginx-service   NodePort    100.71.174.125   <none>        80:30455/TCP   10s
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$
+
+
+
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$ kubectl edit service/my-nginx-service
+Edit cancelled, no changes made.
+[ec2-user@ip-172-31-45-32 mongodbjournal_terraform]$ kubectl edit service/kubernetes
+
+kubectl edit pod/my-nginx-deployment-8568dcdfc4-4sf42
